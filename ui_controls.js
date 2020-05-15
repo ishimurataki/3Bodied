@@ -41,20 +41,47 @@ const registerControls = canvas => {
     canvas.addEventListener('mousemove', moveHandler, false);
     canvas.addEventListener('mousewheel', mousewheelHandler, false);
 
+    var xBefore, yBefore;
+    var distBefore;
+    const touchStartHandler = e => {
+        e.preventDefault();
+        if (e.touches.length == 1) {
+            xBefore = e.touches[0].clientX;
+            yBefore = e.touches[0].clientY;
+        } else if (e.touches.length > 1) {
+            let x = e.touches[0].clientX - e.touches[1].clientX;
+            let y = e.touches[0].clientY - e.touches[1].clientY;
 
-    const handleOrientation = e => {
-        const absolute = e.absolute;
-        const alpha = e.alpha;
-        const beta = e.beta;
-        const gamma = e.gamma;
+            x *= x;
+            y *= y;
 
-        console.log('absolute: ' + absolute);
-        console.log('alpha: ' + alpha);
-        console.log('beta: ' + beta);
-        console.log('gamma: ' + gamma);
-        console.log('*******************');
+            distBefore = Math.sqrt(x + y);
+        }
+    }
+    const touchMoveHandler = e => {
+        e.preventDefault();
+        if (e.touches.length == 1) {
+            let xMove = (e.touches[0].clientX - xBefore) * movementSpeed;
+            let yMove = (e.touches[0].clientY - yBefore) * movementSpeed;
+            camera.rotateTheta(xMove);
+            camera.rotatePhi(yMove);
+            xBefore = e.touches[0].clientX;
+            yBefore = e.touches[0].clientY;
+        } else if (e.touches.length > 1) {
+            let x = e.touches[0].clientX - e.touches[1].clientX;
+            let y = e.touches[0].clientY - e.touches[1].clientY;
+
+            x *= x;
+            y *= y;
+
+            let distNow = Math.sqrt(x + y);
+            let zoom = (distBefore - distNow) * zoomSpeed;
+            camera.zoom(zoom);
+
+            distBefore = distNow;
+        }
     }
 
-    window.addEventListener('deviceorientation', handleOrientation, true);
-
+    canvas.addEventListener('touchstart', touchStartHandler, false);
+    canvas.addEventListener('touchmove', touchMoveHandler, false);
 }
